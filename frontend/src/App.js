@@ -214,27 +214,30 @@ const ProductCard = ({ product, onAddToCart }) => {
 };
 
 // Header Component
-const Header = ({ karmaPoints, cartCount }) => {
+const Header = () => {
+  const { karmaPoints, getTotalItems } = useCart();
+  const cartCount = getTotalItems();
+
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
+            <Link to="/" className="flex-shrink-0 flex items-center">
               <div className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3">
                 <span className="font-bold text-lg">🌱</span>
               </div>
               <h1 className="text-xl font-bold text-gray-900">Ethical Shopping Karma</h1>
-            </div>
+            </Link>
           </div>
           
           {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <a href="#" className="text-gray-700 hover:text-green-600 font-medium">Products</a>
-            <a href="#" className="text-gray-700 hover:text-green-600 font-medium">Categories</a>
-            <a href="#" className="text-gray-700 hover:text-green-600 font-medium">Impact</a>
-            <a href="#" className="text-gray-700 hover:text-green-600 font-medium">Rewards</a>
+            <Link to="/" className="text-gray-700 hover:text-green-600 font-medium">Products</Link>
+            <Link to="/categories" className="text-gray-700 hover:text-green-600 font-medium">Categories</Link>
+            <Link to="/impact" className="text-gray-700 hover:text-green-600 font-medium">Impact</Link>
+            <Link to="/rewards" className="text-gray-700 hover:text-green-600 font-medium">Rewards</Link>
           </nav>
           
           {/* User Actions */}
@@ -245,7 +248,7 @@ const Header = ({ karmaPoints, cartCount }) => {
             </div>
             
             {/* Cart */}
-            <div className="relative">
+            <Link to="/cart" className="relative">
               <button className="bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 4.5M7 13h10M7 13l-4.5-4.5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m10 0V9a2 2 0 00-2 2H9a2 2 0 00-2 2v4" />
@@ -256,7 +259,7 @@ const Header = ({ karmaPoints, cartCount }) => {
                   {cartCount}
                 </span>
               )}
-            </div>
+            </Link>
           </div>
         </div>
       </div>
