@@ -6,6 +6,93 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Cart Context
+const CartContext = createContext();
+
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
+};
+
+const CartProvider = ({ children }) => {
+  const [cart, setCart] = useState([]);
+  const [karmaPoints, setKarmaPoints] = useState(0);
+
+  const addToCart = (product) => {
+    const existingItem = cart.find(item => item.id === product.id);
+    
+    if (existingItem) {
+      setCart(cart.map(item => 
+        item.id === product.id 
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
+    } else {
+      setCart([...cart, { ...product, quantity: 1 }]);
+    }
+    
+    setKarmaPoints(karmaPoints + product.karma_points);
+  };
+
+  const removeFromCart = (productId) => {
+    const item = cart.find(item => item.id === productId);
+    if (item) {
+      setKarmaPoints(karmaPoints - (item.karma_points * item.quantity));
+      setCart(cart.filter(item => item.id !== productId));
+    }
+  };
+
+  const updateQuantity = (productId, newQuantity) => {
+    if (newQuantity === 0) {
+      removeFromCart(productId);
+      return;
+    }
+    
+    const item = cart.find(item => item.id === productId);
+    if (item) {
+      const pointsDiff = (newQuantity - item.quantity) * item.karma_points;
+      setKarmaPoints(karmaPoints + pointsDiff);
+      
+      setCart(cart.map(item => 
+        item.id === productId 
+          ? { ...item, quantity: newQuantity }
+          : item
+      ));
+    }
+  };
+
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    setKarmaPoints(0);
+  };
+
+  return (
+    <CartContext.Provider value={{
+      cart,
+      karmaPoints,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      getTotalPrice,
+      getTotalItems,
+      clearCart
+    }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
+
 // Utility function to get badge color
 const getBadgeColor = (category) => {
   const colors = {
