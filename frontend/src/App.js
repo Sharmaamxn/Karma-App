@@ -367,8 +367,6 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [karmaPoints, setKarmaPoints] = useState(0);
-  const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -403,15 +401,6 @@ const Home = () => {
     }
   };
 
-  // Handle add to cart
-  const handleAddToCart = (product) => {
-    setCartCount(cartCount + 1);
-    setKarmaPoints(karmaPoints + product.karma_points);
-    
-    // Show a temporary success message
-    alert(`Added ${product.name} to cart! You earned ${product.karma_points} karma points! 🎉`);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -443,7 +432,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header karmaPoints={karmaPoints} cartCount={cartCount} />
       <HeroSection />
       <StatsSection 
         totalProducts={products.length} 
@@ -472,7 +460,6 @@ const Home = () => {
             <ProductCard
               key={product.id}
               product={product}
-              onAddToCart={handleAddToCart}
             />
           ))}
         </div>
@@ -492,6 +479,350 @@ const Home = () => {
           </p>
         </div>
       </footer>
+    </div>
+  );
+};
+
+// Categories Page
+const Categories = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(`${API}/products`);
+        setProducts(response.data);
+        setLoading(false);
+      } catch (e) {
+        console.error('Error fetching products:', e);
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  const categories = [...new Set(products.map(product => product.category))];
+  const getCategoryProducts = (category) => {
+    return products.filter(product => product.category === category);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Product Categories</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.map((category) => {
+            const categoryProducts = getCategoryProducts(category);
+            const totalKarma = categoryProducts.reduce((sum, product) => sum + product.karma_points, 0);
+            
+            return (
+              <Link 
+                key={category}
+                to={`/category/${category}`}
+                className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+              >
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{category}</h3>
+                  <p className="text-gray-600 mb-4">{categoryProducts.length} products</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-green-600 font-medium">⚡ {totalKarma} karma points</span>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Category Page
+const CategoryPage = () => {
+  const { category } = useParams();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategoryProducts = async () => {
+      try {
+        const response = await axios.get(`${API}/products/category/${category}`);
+        setProducts(response.data);
+        setLoading(false);
+      } catch (e) {
+        console.error('Error fetching category products:', e);
+        setLoading(false);
+      }
+    };
+    fetchCategoryProducts();
+  }, [category]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center gap-2 mb-8">
+          <Link to="/categories" className="text-green-600 hover:text-green-700">
+            ← Back to Categories
+          </Link>
+        </div>
+        
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">{category}</h1>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Impact Page
+const Impact = () => {
+  const { karmaPoints } = useCart();
+  
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Impact</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="text-3xl font-bold text-green-600 mb-2">⚡ {karmaPoints}</div>
+            <div className="text-gray-600">Total Karma Points</div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="text-3xl font-bold text-blue-600 mb-2">🌱 {Math.floor(karmaPoints / 10)}</div>
+            <div className="text-gray-600">Trees Planted</div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="text-3xl font-bold text-purple-600 mb-2">🌍 {Math.floor(karmaPoints / 25)}kg</div>
+            <div className="text-gray-600">CO2 Saved</div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Impact Over Time</h2>
+          <div className="text-gray-600">
+            <p className="mb-4">Your ethical shopping choices are making a real difference!</p>
+            <ul className="space-y-2">
+              <li>• Supporting sustainable farming practices</li>
+              <li>• Reducing plastic waste through eco-friendly packaging</li>
+              <li>• Promoting fair trade and ethical labor practices</li>
+              <li>• Lowering carbon footprint through sustainable products</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Rewards Page
+const Rewards = () => {
+  const { karmaPoints } = useCart();
+  
+  const rewards = [
+    { name: "Plant a Tree", cost: 100, description: "Plant a tree in your name", icon: "🌳" },
+    { name: "5% Off Next Purchase", cost: 50, description: "Get 5% off your next order", icon: "💸" },
+    { name: "Eco-Friendly Tote Bag", cost: 200, description: "Sustainable shopping bag", icon: "🛍️" },
+    { name: "Carbon Offset", cost: 150, description: "Offset 1 ton of CO2", icon: "🌍" },
+    { name: "Organic Seeds Kit", cost: 75, description: "Grow your own organic herbs", icon: "🌱" },
+    { name: "Solar Charger", cost: 500, description: "Sustainable phone charger", icon: "☀️" }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Rewards Store</h1>
+          <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-medium">
+            ⚡ {karmaPoints} Karma Points
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {rewards.map((reward, index) => {
+            const canAfford = karmaPoints >= reward.cost;
+            
+            return (
+              <div key={index} className="bg-white rounded-xl shadow-lg p-6">
+                <div className="text-4xl mb-4">{reward.icon}</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{reward.name}</h3>
+                <p className="text-gray-600 mb-4">{reward.description}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-green-600 font-medium">⚡ {reward.cost} pts</span>
+                  <button
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      canAfford 
+                        ? 'bg-green-600 text-white hover:bg-green-700' 
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                    disabled={!canAfford}
+                  >
+                    {canAfford ? 'Redeem' : 'Not Enough Points'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Cart Page
+const Cart = () => {
+  const { cart, removeFromCart, updateQuantity, getTotalPrice, getTotalItems, clearCart } = useCart();
+
+  if (cart.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🛒</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
+            <p className="text-gray-600 mb-8">Add some ethical products to start earning karma!</p>
+            <Link
+              to="/"
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Start Shopping
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Cart Items */}
+          <div className="lg:col-span-2">
+            {cart.map((item) => (
+              <div key={item.id} className="bg-white rounded-xl shadow-lg p-6 mb-4">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src={item.image_url} 
+                    alt={item.name}
+                    className="w-20 h-20 object-cover rounded-lg"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
+                    <p className="text-gray-600 mb-2">${item.price}</p>
+                    <div className="flex items-center gap-1 mb-2">
+                      {item.ethical_badges.map((badge, index) => (
+                        <span
+                          key={index}
+                          className={`px-2 py-1 rounded-full text-xs font-medium border ${getBadgeColor(badge.category)}`}
+                        >
+                          {badge.category.replace('_', ' ').toUpperCase()}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => removeFromCart(item.id)}
+                        className="text-red-600 hover:text-red-700 font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-gray-900">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </div>
+                    <div className="text-sm text-green-600">
+                      ⚡ {item.karma_points * item.quantity} pts
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
+              
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between">
+                  <span>Items ({getTotalItems()})</span>
+                  <span>${getTotalPrice().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Shipping</span>
+                  <span>FREE</span>
+                </div>
+                <div className="border-t pt-2">
+                  <div className="flex justify-between font-bold">
+                    <span>Total</span>
+                    <span>${getTotalPrice().toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <button className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors mb-2">
+                Checkout
+              </button>
+              
+              <button
+                onClick={clearCart}
+                className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Clear Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
