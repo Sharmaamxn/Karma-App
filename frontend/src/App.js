@@ -829,13 +829,21 @@ const Cart = () => {
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <CartProvider>
+      <div className="App">
+        <BrowserRouter>
+          <Header />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/category/:category" element={<CategoryPage />} />
+            <Route path="/impact" element={<Impact />} />
+            <Route path="/rewards" element={<Rewards />} />
+            <Route path="/cart" element={<Cart />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </CartProvider>
   );
 }
 
